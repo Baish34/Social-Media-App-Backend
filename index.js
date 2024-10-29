@@ -20,6 +20,24 @@ initializeDatabase();
 const SECRET_KEY = process.env.SECRET_KEY
 const JWT_SECRET = process.env.JWT_SECRET
 
+// const newUser = {
+//     userName: "user123",
+//     email: "user@gmail.com",
+//     password: "password123",
+// }
+
+// async function createUser(newUser) {
+//     try {
+//         const user = new User(newUser)
+//         const saveUser = await user.save()
+//         console.log("New User data:", saveUser)
+//     } catch (error){
+//         throw error
+//     }
+// }
+
+// createUser(newUser)
+
 // Middleware to verify JWT
 const verifyJWT = (req, res, next) => {
   const token = req.headers["authorization"];
