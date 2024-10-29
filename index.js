@@ -38,6 +38,16 @@ const JWT_SECRET = process.env.JWT_SECRET
 
 // createUser(newUser)
 
+app.get("/users", async (req, res) => {
+    try {
+      const allusers = await User.find();
+      res.json(allusers);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
 // Middleware to verify JWT
 const verifyJWT = (req, res, next) => {
   const token = req.headers["authorization"];
