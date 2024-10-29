@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
 const corsOptions = {
-  origin: "*", 
+  origin: "*",
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -17,8 +17,8 @@ const User = require("./models/user.models");
 
 initializeDatabase();
 
-const SECRET_KEY = process.env.SECRET_KEY
-const JWT_SECRET = process.env.JWT_SECRET
+const SECRET_KEY = process.env.SECRET_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // const newUser = {
 //     userName: "user123",
@@ -39,14 +39,14 @@ const JWT_SECRET = process.env.JWT_SECRET
 // createUser(newUser)
 
 app.get("/users", async (req, res) => {
-    try {
-      const allusers = await User.find();
-      res.json(allusers);
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
+  try {
+    const allusers = await User.find();
+    res.json(allusers);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Middleware to verify JWT
 const verifyJWT = (req, res, next) => {
@@ -67,32 +67,32 @@ const verifyJWT = (req, res, next) => {
 
 // new user account
 app.post("/user/register", async (req, res) => {
-    const { userName, email, password } = req.body;
-  
-    if (!userName || !email || !password) {
-      return res.status(400).json({ message: "All fields are required." });
+  const { userName, email, password } = req.body;
+
+  if (!userName || !email || !password) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists." });
     }
-  
-    try {
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(409).json({ message: "User already exists." });
-      }
-  
-      // Create new user
-      const newUser = new User({
-        userName,
-        email,
-        password, 
-      });
-  
-      await newUser.save();
-      res.status(201).json({ message: "User registered successfully." });
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
+
+    // Create new user
+    const newUser = new User({
+      userName,
+      email,
+      password,
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: "User registered successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // User Login Route
 app.post("/user/login", async (req, res) => {
