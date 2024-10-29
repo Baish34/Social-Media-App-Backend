@@ -29,12 +29,42 @@ const verifyJWT = (req, res, next) => {
 
   try {
     const decodedToken = jwt.verify(token, JWT_SECRET);
+
     req.user = decodedToken;
     next();
   } catch (error) {
     return res.status(402).json({ message: "Invalid token" });
   }
 };
+
+// new user account
+app.post("/user/register", async (req, res) => {
+    const { userName, email, password } = req.body;
+  
+    if (!userName || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+  
+    try {
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(409).json({ message: "User already exists." });
+      }
+  
+      // Create new user
+      const newUser = new User({
+        userName,
+        email,
+        password, 
+      });
+  
+      await newUser.save();
+      res.status(201).json({ message: "User registered successfully." });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
 
 // User Login Route
 app.post("/user/login", async (req, res) => {
