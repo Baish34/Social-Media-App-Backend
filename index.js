@@ -14,6 +14,7 @@ app.use(cors(corsOptions));
 
 const { initializeDatabase } = require("./db/db.connect");
 const User = require("./models/user.models");
+const Post = require("./models/post.model");
 
 initializeDatabase();
 
@@ -116,6 +117,21 @@ app.post("/user/login", async (req, res) => {
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/posts", verifyJWT, async (req, res) => {
+  const { content, image } = req.body;
+  try {
+    const post = new Post({
+      userId: req.user.id,
+      content,
+      image,
+    });
+    const savedPost = await post.save();
+    res.status(201).json(savedPost);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create post.", error });
   }
 });
 
