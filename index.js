@@ -120,6 +120,7 @@ app.post("/user/login", async (req, res) => {
   }
 });
 
+// Create a new post
 app.post("/posts", verifyJWT, async (req, res) => {
   const { content, image } = req.body;
   try {
@@ -138,7 +139,9 @@ app.post("/posts", verifyJWT, async (req, res) => {
 // Get all posts
 app.get("/posts", async (req, res) => {
   try {
-    const posts = await Post.find().populate("userId", "userName").populate("comments.userId", "userName");
+    const posts = await Post.find()
+      .populate("userId", "userName")
+      .populate("comments.userId", "userName");
     res.json(posts);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch posts.", error });
@@ -148,7 +151,9 @@ app.get("/posts", async (req, res) => {
 // Get a specific post by ID
 app.get("/posts/:id", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("userId", "userName").populate("comments.userId", "userName");
+    const post = await Post.findById(req.params.id)
+      .populate("userId", "userName")
+      .populate("comments.userId", "userName");
     if (!post) return res.status(404).json({ message: "Post not found." });
     res.json(post);
   } catch (error) {
@@ -165,7 +170,10 @@ app.put("/posts/:id", verifyJWT, async (req, res) => {
       { content, image },
       { new: true }
     );
-    if (!post) return res.status(404).json({ message: "Post not found or unauthorized." });
+    if (!post)
+      return res
+        .status(404)
+        .json({ message: "Post not found or unauthorized." });
     res.json(post);
   } catch (error) {
     res.status(500).json({ message: "Failed to update post.", error });
@@ -175,8 +183,14 @@ app.put("/posts/:id", verifyJWT, async (req, res) => {
 // Delete a post
 app.delete("/posts/:id", verifyJWT, async (req, res) => {
   try {
-    const post = await Post.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    if (!post) return res.status(404).json({ message: "Post not found or unauthorized." });
+    const post = await Post.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+    if (!post)
+      return res
+        .status(404)
+        .json({ message: "Post not found or unauthorized." });
     res.json({ message: "Post deleted successfully." });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete post.", error });
@@ -186,7 +200,11 @@ app.delete("/posts/:id", verifyJWT, async (req, res) => {
 // Like a post
 app.put("/posts/:id/like", verifyJWT, async (req, res) => {
   try {
-    const post = await Post.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true });
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
     if (!post) return res.status(404).json({ message: "Post not found." });
     res.json(post);
   } catch (error) {
