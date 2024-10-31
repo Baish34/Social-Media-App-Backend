@@ -14,7 +14,7 @@ app.use(cors(corsOptions));
 
 const { initializeDatabase } = require("./db/db.connect");
 const User = require("./models/user.models");
-const Post = require("./models/post.model");
+const Post = require("./models/post.models");
 
 initializeDatabase();
 
