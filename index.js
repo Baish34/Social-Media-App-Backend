@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
 const corsOptions = {
-  origin: "https://social-media-app-tau-two.vercel.app",
+  origin: "*",
   credentials: true,
   optionSuccessStatus: 200,
 };
