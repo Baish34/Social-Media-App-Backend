@@ -9,8 +9,9 @@ const corsOptions = {
 };
 
 const app = express();
-app.use(express.json());
 app.use(cors(corsOptions));
+app.use(express.json());
+
 
 const { initializeDatabase } = require("./db/db.connect");
 const User = require("./models/user.models");
