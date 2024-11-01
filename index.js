@@ -67,21 +67,32 @@ app.post("/user/register", async (req, res) => {
 app.post("/user/login", async (req, res) => {
   const { email, password, secret } = req.body;
 
+  // Log the received login data
+  console.log("Received login data:", { email, password, secret });
+
+  // Check for the secret key
   if (secret !== SECRET_KEY) {
+    console.log("Invalid secret key received");
     return res.status(403).json({ message: "Invalid secret key." });
   }
 
   try {
+    // Attempt to find the user
     const user = await User.findOne({ email, password });
     if (!user) {
+      console.log("Invalid email or password");
       return res.status(403).json({ message: "Invalid email or password" });
     }
 
+    // Generate a token if login is successful
     const token = jwt.sign({ id: user._id, role: "user" }, JWT_SECRET, {
       expiresIn: "24h",
     });
+    
+    console.log("Login successful for user:", user.userName);
     res.json({ token });
   } catch (error) {
+    console.error("Server error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
