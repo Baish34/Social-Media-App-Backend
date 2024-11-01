@@ -69,6 +69,7 @@ app.post("/user/login", async (req, res) => {
 
   // Log the received login data
   console.log("Received login data:", { email, password, secret });
+  console.log("Expected secret key:", SECRET_KEY);
 
   // Check for the secret key
   if (secret !== SECRET_KEY) {
