@@ -22,7 +22,7 @@ const Post = require("./models/post.models");
 initializeDatabase();
 
 const SECRET_KEY = process.env.SECRET_KEY;
-const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_key"; // For local testing
+const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_key"; 
 
 // Middleware to verify JWT
 const verifyJWT = (req, res, next) => {
