@@ -25,14 +25,6 @@ const userSchema = new mongoose.Schema(
       type: String, 
       default: "",
     },
-    profilePicture: {
-      type: String, 
-      default: "",
-    },
-    coverPhoto: {
-      type: String,
-      default: "",
-    },
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -43,12 +35,6 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-      },
-    ],
-    posts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
       },
     ],
     bookmarks: [
