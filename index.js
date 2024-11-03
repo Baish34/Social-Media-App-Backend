@@ -17,6 +17,7 @@ app.use(express.json());
 
 const { initializeDatabase } = require("./db/db.connect");
 const User = require("./models/user.models");
+const Post = require("./models/post.models")
 
 initializeDatabase();
 
@@ -79,6 +80,23 @@ app.get("/users", async (req, res) => {
 
 app.get("/admin/api/data", authMiddleware, (req, res) => {
   res.json({ message: "Protected route accessible" });
+});
+
+
+// Create a new post
+app.post("/posts", authMiddleware, async (req, res) => {
+  const { content, media } = req.body;
+  try {
+    const post = new Post({
+      user: req.user.userId,  
+      content,
+      media,
+    });
+    await post.save();
+    res.status(201).json({ message: "Post created successfully", post });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create post" });
+  }
 });
 
 
