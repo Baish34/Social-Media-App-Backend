@@ -52,17 +52,14 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    console.log("User found:", user); // Log the user object
 
-    if (user && user.password === password) {  // Directly compare passwords
+    if (user && user.password === password) {  
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
       res.json({ token, user });
     } else {
-      console.log("Invalid credentials"); // Log if credentials are invalid
       res.status(400).json({ error: 'Invalid credentials' });
     }
   } catch (error) {
-    console.error("Error during login:", error); // Log any errors
     res.status(500).json({ error: 'Failed to login' });
   }
 });
