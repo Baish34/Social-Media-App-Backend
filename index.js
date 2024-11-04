@@ -65,6 +65,38 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Get user profile along with their posts
+app.get("/profile", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find user details
+    const user = await User.findById(userId).select("username email bio avatar followers following");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Find posts by this user
+    const userPosts = await Post.find({ user: userId }).sort({ createdAt: -1 });
+
+    res.json({
+      user: {
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        avatar: user.avatar,
+        followers: user.followers.length,
+        following: user.following.length,
+      },
+      posts: userPosts,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve profile and posts" });
+  }
+});
+
+
 
 // Get all users
 app.get("/users", async (req, res) => {
