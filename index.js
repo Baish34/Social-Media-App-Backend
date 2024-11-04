@@ -23,17 +23,18 @@ initializeDatabase();
 
 // Middleware for JWT verification
 const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization');
-  if (!token) return res.status(401).json({ error: 'Access denied' });
+  const token = req.header("Authorization") // Extract the token
+  if (!token) return res.status(401).json({ error: "Access denied" });
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
     next();
   } catch (error) {
-    res.status(400).json({ error: 'Invalid token' });
+    res.status(400).json({ error: "Invalid token" });
   }
 };
+
 
 // Register User
 app.post("/register", async (req, res) => {
@@ -93,6 +94,28 @@ app.post("/posts", authMiddleware, async (req, res) => {
     res.status(201).json({ message: "Post created successfully", post });
   } catch (error) {
     res.status(500).json({ error: "Failed to create post" });
+  }
+});
+
+
+// Get all posts
+app.get("/posts", async (req, res) => {
+  try {
+    const posts = await Post.find().populate("user", "username").exec();
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve posts" });
+  }
+});
+
+// Get a single post by ID
+app.get("/posts/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate("user", "username");
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve post" });
   }
 });
 
