@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    name: {
       type: String,
       required: true,
       unique: true,
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema(
     ],
   },
   { timestamps: true },
-  { collection: "usersData" }
+  { collection: "usersDatas" }
 );
 
 const User = mongoose.model("User", userSchema);

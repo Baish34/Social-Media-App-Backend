@@ -38,9 +38,9 @@ const authMiddleware = (req, res, next) => {
 
 // Register User
 app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, password } = req.body;
   try {
-    const user = new User({ username, email, password });
+    const user = new User({ name, email, password });
     await user.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -71,7 +71,7 @@ app.get("/profile", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
 
     // Find user details
-    const user = await User.findById(userId).select("username email bio avatar followers following");
+    const user = await User.findById(userId).select("name email bio avatar followers following");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -82,7 +82,7 @@ app.get("/profile", authMiddleware, async (req, res) => {
 
     res.json({
       user: {
-        username: user.username,
+        name: user.name,
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
@@ -109,7 +109,7 @@ app.get("/users", async (req, res) => {
 });
 
 // Follow a user
-router.post("/follow/:id", authMiddleware, async (req, res) => {
+app.post("/follow/:id", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userToFollowId = req.params.id;
@@ -135,7 +135,7 @@ router.post("/follow/:id", authMiddleware, async (req, res) => {
 });
 
 // Unfollow a user
-router.post("/unfollow/:id", authMiddleware, async (req, res) => {
+app.post("/unfollow/:id", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     const userToUnfollowId = req.params.id;
@@ -184,7 +184,7 @@ app.post("/posts", authMiddleware, async (req, res) => {
 // Get all posts
 app.get("/posts", async (req, res) => {
   try {
-    const posts = await Post.find().populate("user", "username").exec();
+    const posts = await Post.find().populate("user", "name").exec();
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve posts" });
@@ -194,7 +194,7 @@ app.get("/posts", async (req, res) => {
 // Get a single post by ID
 app.get("/posts/:id", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("user", "username");
+    const post = await Post.findById(req.params.id).populate("user", "name");
     if (!post) return res.status(404).json({ error: "Post not found" });
     res.json(post);
   } catch (error) {
