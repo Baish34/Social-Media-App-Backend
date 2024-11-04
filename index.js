@@ -76,6 +76,57 @@ app.get("/users", async (req, res) => {
   }
 });
 
+// Follow a user
+router.post("/follow/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const userToFollowId = req.params.id;
+
+    const user = await User.findById(userId);
+    const userToFollow = await User.findById(userToFollowId);
+
+    if (!user || !userToFollow) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.following.includes(userToFollowId)) {
+      user.following.push(userToFollowId);
+      userToFollow.followers.push(userId);
+      await user.save();
+      await userToFollow.save();
+    }
+
+    res.json({ message: "User followed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to follow user" });
+  }
+});
+
+// Unfollow a user
+router.post("/unfollow/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const userToUnfollowId = req.params.id;
+
+    const user = await User.findById(userId);
+    const userToUnfollow = await User.findById(userToUnfollowId);
+
+    if (!user || !userToUnfollow) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.following = user.following.filter((id) => id.toString() !== userToUnfollowId);
+    userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== userId);
+
+    await user.save();
+    await userToUnfollow.save();
+
+    res.json({ message: "User unfollowed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to unfollow user" });
+  }
+});
+
 app.get("/admin/api/data", authMiddleware, (req, res) => {
   res.json({ message: "Protected route accessible" });
 });
