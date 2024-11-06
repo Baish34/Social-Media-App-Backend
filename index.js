@@ -27,6 +27,17 @@ const authMiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ error: "Access denied" });
 
   try {
+
+    const decodedToken = jwt.decode(token);
+    console.log("Decoded Token:", decodedToken); 
+    const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
+if (decodedToken.exp < currentTime) {
+  console.log("Token has expired");
+} else {
+  console.log("Token is valid");
+}
+
+
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
     next();
@@ -34,8 +45,6 @@ const authMiddleware = (req, res, next) => {
     res.status(400).json({ error: "Invalid token" });
   }
 };
-
-
 // Register User
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -121,14 +130,14 @@ app.post("/follow/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    if (!user.following.includes(userToFollowId)) {
+    if (!user.following.includes(userToFollowId.toString())) {
       user.following.push(userToFollowId);
       userToFollow.followers.push(userId);
       await user.save();
       await userToFollow.save();
     }
 
-    res.json({ message: "User followed successfully" });
+    res.json({ userId: userToFollowId, message: "User followed successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to follow user" });
   }
@@ -147,17 +156,22 @@ app.post("/unfollow/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    user.following = user.following.filter((id) => id.toString() !== userToUnfollowId);
-    userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== userId);
+    if (user.following.includes(userToUnfollowId.toString())) {
+      user.following = user.following.filter((id) => id.toString() !== userToUnfollowId);
+      userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== userId);
+      await user.save();
+      await userToUnfollow.save();
 
-    await user.save();
-    await userToUnfollow.save();
-
-    res.json({ message: "User unfollowed successfully" });
+      res.json({ userId: userToUnfollowId, message: "User unfollowed successfully" });
+    } else {
+      res.status(400).json({ error: "Not following this user" });
+    }
   } catch (error) {
     res.status(500).json({ error: "Failed to unfollow user" });
   }
 });
+
+
 
 app.get("/admin/api/data", authMiddleware, (req, res) => {
   res.json({ message: "Protected route accessible" });
@@ -191,16 +205,17 @@ app.get("/posts", async (req, res) => {
   }
 });
 
-// Get a single post by ID
-app.get("/posts/:id", async (req, res) => {
+// Get posts for a specific user
+app.get("/posts/user/:userId", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("user", "name");
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    res.json(post);
+    const posts = await Post.find({ user: req.params.userId }); // Get posts for the specific user
+    if (!posts) return res.status(404).json({ error: "Posts not found" });
+    res.json(posts);
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve post" });
+    res.status(500).json({ error: "Failed to retrieve posts" });
   }
 });
+
 
 
 app.listen(3000, () => console.log("Server is running on 3000"));
