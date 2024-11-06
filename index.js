@@ -132,6 +132,33 @@ app.post("/bookmark/:postId", authMiddleware, async (req, res) => {
   }
 });
 
+// Remove a post from bookmarks
+app.delete("/bookmark/:postId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const postId = req.params.postId;
+
+    const user = await User.findById(userId);
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (user.bookmarkedPosts.includes(postId)) {
+      user.bookmarkedPosts = user.bookmarkedPosts.filter(
+        (id) => id.toString() !== postId.toString()
+      );
+      await user.save();
+      res.json({ message: "Post removed from bookmarks" });
+    } else {
+      res.status(400).json({ error: "Post not bookmarked" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to remove post from bookmarks" });
+  }
+});
+
 // Like a post
 app.post("/like/:postId", authMiddleware, async (req, res) => {
   try {
@@ -152,6 +179,32 @@ app.post("/like/:postId", authMiddleware, async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: "Failed to like post" });
+  }
+});
+
+// Unlike a post
+app.delete("/like/:postId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const postId = req.params.postId;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (post.likes.includes(userId)) {
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+      await post.save();
+      res.json({ message: "Post unliked successfully" });
+    } else {
+      res.status(400).json({ error: "Post not liked yet" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to unlike post" });
   }
 });
 
