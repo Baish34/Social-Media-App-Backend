@@ -27,15 +27,6 @@ const authMiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ error: "Access denied" });
 
   try {
-    const decodedToken = jwt.decode(token);
-    console.log("Decoded Token:", decodedToken);
-    const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
-    if (decodedToken.exp < currentTime) {
-      console.log("Token has expired");
-    } else {
-      console.log("Token is valid");
-    }
-
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
     next();
@@ -113,22 +104,26 @@ app.post("/bookmark/:postId", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
     const postId = req.params.postId;
 
-    const user = await User.findById(userId);
     const post = await Post.findById(postId);
-
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    if (!user.bookmarkedPosts.includes(postId)) {
-      user.bookmarkedPosts.push(postId);
-      await user.save();
-      res.json({ message: "Post bookmarked successfully" });
-    } else {
-      res.status(400).json({ error: "Post already bookmarked" });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { bookmarkedPosts: postId } },
+      { new: true }
+    );
+
+    if (!updatedUser.bookmarkedPosts.includes(postId)) {
+      return res.status(500).json({ error: "Failed to bookmark post" });
     }
+
+    res.json({ message: "Post bookmarked successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to bookmark post" });
+    res
+      .status(500)
+      .json({ error: "Failed to bookmark post", details: error.message });
   }
 });
 
@@ -138,24 +133,29 @@ app.delete("/bookmark/:postId", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
     const postId = req.params.postId;
 
-    const user = await User.findById(userId);
     const post = await Post.findById(postId);
-
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    if (user.bookmarkedPosts.includes(postId)) {
-      user.bookmarkedPosts = user.bookmarkedPosts.filter(
-        (id) => id.toString() !== postId.toString()
-      );
-      await user.save();
-      res.json({ message: "Post removed from bookmarks" });
-    } else {
-      res.status(400).json({ error: "Post not bookmarked" });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { bookmarkedPosts: postId } },
+      { new: true }
+    );
+
+    if (updatedUser.bookmarkedPosts.includes(postId)) {
+      return res.status(500).json({ error: "Failed to remove bookmark" });
     }
+
+    res.json({ message: "Post removed from bookmarks" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to remove post from bookmarks" });
+    res
+      .status(500)
+      .json({
+        error: "Failed to remove post from bookmarks",
+        details: error.message,
+      });
   }
 });
 
@@ -165,20 +165,25 @@ app.post("/like/:postId", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
     const postId = req.params.postId;
 
-    const post = await Post.findById(postId);
+    const post = await Post.findByIdAndUpdate(
+      postId,
+      { $addToSet: { likes: userId } },
+      { new: true }
+    );
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+
     if (!post.likes.includes(userId)) {
-      post.likes.push(userId);
-      await post.save();
-      res.json({ message: "Post liked successfully" });
-    } else {
-      res.status(400).json({ error: "Post already liked" });
+      return res.status(500).json({ error: "Failed to like post" });
     }
+
+    res.json({ message: "Post liked successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to like post" });
+    res
+      .status(500)
+      .json({ error: "Failed to like post", details: error.message });
   }
 });
 
@@ -188,23 +193,25 @@ app.delete("/like/:postId", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
     const postId = req.params.postId;
 
-    const post = await Post.findById(postId);
+    const post = await Post.findByIdAndUpdate(
+      postId,
+      { $pull: { likes: userId } },
+      { new: true }
+    );
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
     if (post.likes.includes(userId)) {
-      post.likes = post.likes.filter(
-        (id) => id.toString() !== userId.toString()
-      );
-      await post.save();
-      res.json({ message: "Post unliked successfully" });
-    } else {
-      res.status(400).json({ error: "Post not liked yet" });
+      return res.status(500).json({ error: "Failed to unlike post" });
     }
+
+    res.json({ message: "Post unliked successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to unlike post" });
+    res
+      .status(500)
+      .json({ error: "Failed to unlike post", details: error.message });
   }
 });
 
