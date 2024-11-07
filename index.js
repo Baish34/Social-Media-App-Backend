@@ -111,11 +111,11 @@ app.post("/bookmark/:postId", authMiddleware, async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $addToSet: { bookmarkedPosts: postId } },
+      { $addToSet: { bookmarks: postId } },
       { new: true }
     );
 
-    if (!updatedUser.bookmarkedPosts.includes(postId)) {
+    if (!updatedUser.bookmarks.includes(postId)) {
       return res.status(500).json({ error: "Failed to bookmark post" });
     }
 
@@ -126,6 +126,7 @@ app.post("/bookmark/:postId", authMiddleware, async (req, res) => {
       .json({ error: "Failed to bookmark post", details: error.message });
   }
 });
+
 
 // Remove a post from bookmarks
 app.delete("/bookmark/:postId", authMiddleware, async (req, res) => {
@@ -140,11 +141,11 @@ app.delete("/bookmark/:postId", authMiddleware, async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $pull: { bookmarkedPosts: postId } },
+      { $pull: { bookmarks: postId } },
       { new: true }
     );
 
-    if (updatedUser.bookmarkedPosts.includes(postId)) {
+    if (updatedUser.bookmarks.includes(postId)) {
       return res.status(500).json({ error: "Failed to remove bookmark" });
     }
 
