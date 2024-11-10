@@ -98,123 +98,6 @@ app.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// Bookmark a post
-app.post("/bookmark/:postId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const postId = req.params.postId;
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { bookmarks: postId } },
-      { new: true }
-    );
-
-    if (!updatedUser.bookmarks.includes(postId)) {
-      return res.status(500).json({ error: "Failed to bookmark post" });
-    }
-
-    res.json({ message: "Post bookmarked successfully" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to bookmark post", details: error.message });
-  }
-});
-
-
-// Remove a post from bookmarks
-app.delete("/bookmark/:postId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const postId = req.params.postId;
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $pull: { bookmarks: postId } },
-      { new: true }
-    );
-
-    if (updatedUser.bookmarks.includes(postId)) {
-      return res.status(500).json({ error: "Failed to remove bookmark" });
-    }
-
-    res.json({ message: "Post removed from bookmarks" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Failed to remove post from bookmarks",
-        details: error.message,
-      });
-  }
-});
-
-// Like a post
-app.post("/like/:postId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const postId = req.params.postId;
-
-    const post = await Post.findByIdAndUpdate(
-      postId,
-      { $addToSet: { likes: userId } },
-      { new: true }
-    );
-
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    if (!post.likes.includes(userId)) {
-      return res.status(500).json({ error: "Failed to like post" });
-    }
-
-    res.json({ message: "Post liked successfully" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to like post", details: error.message });
-  }
-});
-
-// Unlike a post
-app.delete("/like/:postId", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const postId = req.params.postId;
-
-    const post = await Post.findByIdAndUpdate(
-      postId,
-      { $pull: { likes: userId } },
-      { new: true }
-    );
-
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    if (post.likes.includes(userId)) {
-      return res.status(500).json({ error: "Failed to unlike post" });
-    }
-
-    res.json({ message: "Post unliked successfully" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to unlike post", details: error.message });
-  }
-});
 
 // Get all users
 app.get("/users", async (req, res) => {
@@ -286,6 +169,55 @@ app.post("/unfollow/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to unfollow user" });
   }
 });
+
+// Like a post
+app.post("/posts/:postId/like", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const postId = req.params.postId;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Check if the user already liked the post
+    if (!post.likes.includes(userId)) {
+      post.likes.push(userId);
+      await post.save();
+      return res.json({ message: "Post liked successfully", post });
+    }
+
+    res.status(400).json({ error: "Post already liked" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to like post" });
+  }
+});
+
+// Unlike a post
+app.post("/posts/:postId/unlike", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const postId = req.params.postId;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Check if the user has liked the post
+    if (post.likes.includes(userId)) {
+      post.likes = post.likes.filter((id) => id.toString() !== userId);
+      await post.save();
+      return res.json({ message: "Post unliked successfully", post });
+    }
+
+    res.status(400).json({ error: "Post not liked yet" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to unlike post" });
+  }
+});
+
 
 app.get("/admin/api/data", authMiddleware, (req, res) => {
   res.json({ message: "Protected route accessible" });
