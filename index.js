@@ -218,6 +218,56 @@ app.post("/posts/:postId/unlike", authMiddleware, async (req, res) => {
   }
 });
 
+// Bookmark a post
+app.post("/posts/:postId/bookmark", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId; // User ID from auth middleware
+    const postId = req.params.postId;
+
+    // Check if the post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (!post.bookmarks.includes(userId)) {
+      post.bookmarks.push(userId);
+      await post.save();
+      return res.json({ message: "Post bookmarked successfully", bookmarks});
+    }
+
+    res.status(400).json({ error: "Post already bookmarked" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to bookmark post" });
+  }
+});
+
+// Remove a bookmarked post
+app.post("/posts/:postId/unbookmark", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId; // User ID from auth middleware
+    const postId = req.params.postId;
+
+    // Check if the post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Remove the bookmark if it exists
+    if (post.bookmarks.includes(userId)) {
+      post.bookmarks = post.bookmarks.filter((id) => id.toString() !== userId);
+      await post.save();
+      return res.json({ message: "Post removed from bookmarks", bookmarks});
+    }
+
+    res.status(400).json({ error: "Post not bookmarked yet" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to remove bookmark" });
+  }
+});
 
 app.get("/admin/api/data", authMiddleware, (req, res) => {
   res.json({ message: "Protected route accessible" });
@@ -252,7 +302,7 @@ app.get("/posts", async (req, res) => {
 // Get posts for a specific user
 app.get("/posts/user/:userId", async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.params.userId }); // Get posts for the specific user
+    const posts = await Post.find({ user: req.params.userId }); 
     if (!posts) return res.status(404).json({ error: "Posts not found" });
     res.json(posts);
   } catch (error) {
