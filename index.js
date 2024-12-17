@@ -98,7 +98,6 @@ app.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-
 // Get all users
 app.get("/users", async (req, res) => {
   try {
@@ -233,7 +232,7 @@ app.post("/posts/:postId/bookmark", authMiddleware, async (req, res) => {
     if (!post.bookmarks.includes(userId)) {
       post.bookmarks.push(userId);
       await post.save();
-      return res.json({ message: "Post bookmarked successfully", bookmarks});
+      return res.json({ message: "Post bookmarked successfully", post });
     }
 
     res.status(400).json({ error: "Post already bookmarked" });
@@ -259,7 +258,7 @@ app.post("/posts/:postId/unbookmark", authMiddleware, async (req, res) => {
     if (post.bookmarks.includes(userId)) {
       post.bookmarks = post.bookmarks.filter((id) => id.toString() !== userId);
       await post.save();
-      return res.json({ message: "Post removed from bookmarks", bookmarks});
+      return res.json({ message: "Post removed from bookmarks", post });
     }
 
     res.status(400).json({ error: "Post not bookmarked yet" });
@@ -302,7 +301,7 @@ app.get("/posts", async (req, res) => {
 // Get posts for a specific user
 app.get("/posts/user/:userId", async (req, res) => {
   try {
-    const posts = await Post.find({ user: req.params.userId }); 
+    const posts = await Post.find({ user: req.params.userId });
     if (!posts) return res.status(404).json({ error: "Posts not found" });
     res.json(posts);
   } catch (error) {
